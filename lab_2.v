@@ -52,3 +52,11 @@ always @(data_in) begin
     
     
 endmodule
+
+module lab_1(
+input a,
+input b,
+output c
+    );
+    assign c=a+b;
+endmodule
