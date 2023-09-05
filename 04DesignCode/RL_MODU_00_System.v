@@ -36,10 +36,18 @@ module System(
 
   ///R：为处理 SW 电平信号，设置的内部信号
   //R：读取 SW 电平信号后存储在内部的 Code & Key
-  reg [15:0] Code, Key;
+  reg [15:0] Key;
+  reg [15:0] Code;
   //R：用 0/1 Flag 表征 SW 电平信号是否改变，0——不变，1——改变
-  reg Code_Change_Flag;
-  //R：记录已经输入的 Code bit
+  //reg Code_Change_Flag;//R：不足够，因为对于冲突的处理，需要明确知道具体哪个 SW 发生了 UP/DOWN 怎样的变化
+  //R：用更为细致的方式进行表述，为了判断具体哪个 SW 发生了怎样的变化，需要记录历史 电平 情况进行比较
+  //R：为了在比较后将 SW_History 进行更新，在 input/output 中各放一个 History 的变量，方便块执行后更新
+  reg [9:0] SW_History_In;
+  reg [9:0] SW_History_Out;
+  //R：对于 Up/Down 两种状态，分别设置一个队列进行记录，5 bit 总线，[0]——Flag 标志位，队满/是否改变，[4:1]——具体哪位发生了改变
+  reg [4:0] Up_Queue;
+  reg [4:0] Down_Queue;
+  //R：记录已经输入的 Code bit，具有的取值范围————0,1,2,3,4，所以需要三位总线
   reg [2:0] Code_Bit;
 
   ///R：为处理 BTN 电平信号，设置的一组内部信号
@@ -82,13 +90,12 @@ module System(
   end
 
   //R：次态逻辑,复位已经在次态逻辑中写掉，此处已经无需再考虑
-  always @ (Current_State or Code_Change_Flag or BTN_Change_Flag)
+  /*always @ (Current_State or Code_Change_Flag or BTN_Change_Flag)
   begin
     case(Current_State)
       WAIT:
       begin
-        if(Code_Change_Flag) Next_State = INPUT;
-        else Next_State = WAIT;
+
       end
       INPUT:
       begin
@@ -109,5 +116,5 @@ module System(
       default:
         Current_State = WAIT;
     endcase
-  end
+  end*/
 endmodule
