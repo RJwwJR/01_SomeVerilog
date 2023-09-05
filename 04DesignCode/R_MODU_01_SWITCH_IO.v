@@ -5,7 +5,7 @@
 // 
 // Create Date: 2023/09/04 22:24:04
 // Design Name: 
-// Module Name: R_SWITCH_IO_MODU_1
+// Module Name: SWITCH_IO
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module R_SWITCH_IO_MODU_1(
+module SWITCH_IO(
 
     );
 endmodule

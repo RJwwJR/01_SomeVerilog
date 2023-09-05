@@ -5,7 +5,7 @@
 // 
 // Create Date: 2023/09/04 13:52:36
 // Design Name: 
-// Module Name: RL_System
+// Module Name: System
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module RL_System(
+module System(
   input CLK,
   input [9:0] SW,
   input [2:0] BTN,
