@@ -22,14 +22,13 @@
 
 module R_MODU_01_SWITCH_IO_tb();
 // SWITCH_IO Parameters
-parameter PERIOD    = 10;
-parameter Byte      = 4;
-parameter Up        = 1;
-parameter Down      = 0;
-parameter UnChange  = 2;
+parameter PERIOD = 10;
+parameter Byte  = 4;
+parameter Up    = 1;
+parameter Down  = 0;
 
 // SWITCH_IO Inputs
-reg   CLK                                  = 0 ;
+reg   RESET                                = 0 ;
 reg   [9:0]  SW                            = 0 ;
 reg   [9:0]  SW_History                    = 0 ;
 
@@ -38,18 +37,24 @@ wire  [7:0]  Up_Queue                      ;
 wire  [9:0]  SW_History_Out                ;
 wire  [15:0]  Code                         ;
 wire  [2:0]  Code_Bit                      ;
+
+
 initial
 begin
-    forever #(PERIOD/2)  CLK =~CLK;
+    forever #(PERIOD/2)  clk=~clk;
+end
+
+initial
+begin
+    #(PERIOD*2) rst_n  =  1;
 end
 
 SWITCH_IO #(
-    .Byte     ( Byte     ),
-    .Up       ( Up       ),
-    .Down     ( Down     ),
-    .UnChange ( UnChange ))
-    u_SWITCH_IO (
-    .CLK                     ( CLK                    ),
+    .Byte ( Byte ),
+    .Up   ( Up   ),
+    .Down ( Down ))
+ u_SWITCH_IO (
+    .RESET                   ( RESET                  ),
     .SW                      ( SW              [9:0]  ),
     .SW_History              ( SW_History      [9:0]  ),
 
@@ -58,11 +63,5 @@ SWITCH_IO #(
     .Code                    ( Code            [15:0] ),
     .Code_Bit                ( Code_Bit        [2:0]  )
 );
-
-//    initial
-//    begin
-
-//        $finish;
-//    end
 
 endmodule
