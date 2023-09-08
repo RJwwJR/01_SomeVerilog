@@ -21,8 +21,8 @@
 
 
 module SWITCH_IO(
-  //input CLK,//R：组合逻辑，译码器，似乎不涉及时钟的操作。
-  input RESET;
+  input CLK,
+  input RESET_N,
   input [9:0] SW,
   input [9:0] SW_History,
 
@@ -39,24 +39,26 @@ module SWITCH_IO(
   parameter Byte = 4;
   //R：对应 j 的各种情况
   parameter Up = 1;
-  parameter Down = 0; //R：似乎 parameter 不能给出负常量
+  parameter Down = 0; //R：似乎 parameter 不能给出负常量，避免负数的使用
   
-  ////R:当发生改变，立即处理信号，由于 SWITCH 电平改变未必和时钟一致，因此应该为组合逻辑
-  always@ (SW or negedge RESET)
+  ////R:当发生改变，立即处理信号，由于 SWITCH 电平改变未必和时钟一致，因此应该为组合逻辑】
+  //R：有误！敏感信号应该是时钟信号
+  always@ (posedge CLK or negedge RESET_N)
   begin
-   if(!RESET)//R：RESET 触发的情况
+   if(!RESET_N)//R：RESET_N 触发的情况
     begin
-      //R：硬件状态记录保持不变，这样异步 RESET 之后利用 硬件状态 实施的 冲突/矛盾处理 才是有效的
-      Up_Queue = Up_Queue;
-      //R：系统 异步RESET 的含义，将内部的数据全部置为初始态
-      Code = 16'hffff; //R：注意 Code 的初始态并不存在于密码的总集中，由于只有四位总线，取这一个特殊值也是可以的
-      Code_Bit = 3'b0;
+      //R：硬件状态记录保持不变，这样同步 RESET_N 之后利用 硬件状态 实施的 冲突/矛盾处理 才是有效的
+      Up_Queue <= Up_Queue;
+      //R：系统 同步 RESET_N 的含义，将内部的数据全部置为初始态
+      Code <= 16'hffff; //R：注意 Code 的初始态并不存在于密码的总集中，由于只有四位总线，取这一个特殊值也是可以的
+      Code_Bit <= 3'b0;
     end
    else
     begin
-      for ( i = 4'd0; i <= 4'd9 ; i = i + 1)
+      for ( i = 0; i <= 9 ; i = i + 1)
         begin
           //R：通过比较，将负值的情况映射到 0/1/2 三种，避免使用 integrer
+          //R：注意！在此种情况下，有可能存在冲突赋值的问题，多路并行信号对同一个 [1:0]j 进行赋值
           if (SW[i] > SW_History[i]) j = 1;
           else if (SW[i] < SW_History[i]) j = 0;
           else j = 2;
@@ -68,52 +70,52 @@ module SWITCH_IO(
                   if(0 <= Code_Bit < 4)//R：已初始化 && 正常输入状态 == 可以录入
                     begin
                       //R:处理外部硬件状态，i.e.，Up_Queue
-                      Up_Queue[7:4] = i;//R:接收新的 Up 
-                      Up_Queue[3:0] = Up_Queue[3:0] + 1;//R: Up 队列入队计数++
+                      Up_Queue[7:4] <= i;//R:接收新的 Up 
+                      Up_Queue[3:0] <= Up_Queue[3:0] + 1;//R: Up 队列入队计数++
                       //R：更新内部信号状态，i.e.，实现 I/O
-                      Code_Bit = Code_Bit + 1;//R：进一位，准备录入
-                      Code[(Code_Bit * Byte - 1) -:Byte] = Up_Queue[7:4];//R：按照 i 的情况按位录入相应的密码
+                      Code_Bit <= Code_Bit + 1;//R：进一位，准备录入
+                      Code[(Code_Bit * Byte - 1) -:Byte] <= Up_Queue[7:4];//R：按照 i 的情况按位录入相应的密码
                     end
                   else//R：已初始化 && 超出输入位数（小于0 / 大于等于4） == 硬件有改变 但不能录入
                     begin
                       //R：外部硬件状态仍需要处理，只不过内部信号不做相应的更新
-                      Up_Queue[7:4] = i;//R:接收新的 Up，注意！接收不接收 Up 是由 Up_Queue[3:0] 决定
-                      Up_Queue[3:0] = Up_Queue[3:0] + 1;//R: Up 队列入队计数++
+                      Up_Queue[7:4] <= i;//R:接收新的 Up，注意！接收不接收 Up 是由 Up_Queue[3:0] 决定
+                      Up_Queue[3:0] <= Up_Queue[3:0] + 1;//R: Up 队列入队计数++
                       //R：不更新内部 I/O
-                      Code_Bit = Code_Bit;
-                      Code = Code;
+                      Code_Bit <= Code_Bit;
+                      Code <= Code;
                     end
                 end
               else//R：此前已经有 Up 的 SW，根本不用 Code_Bit 自检，直接锁死内部 I/O
               //R：但外部硬件状态还是需要记录的
               begin
-                Up_Queue[7:4] = Up_Queue[7:4];//R:不接收新的 Up 
-                Up_Queue[3:0] = Up_Queue[3:0] + 1;//R: 但仍要更新 Up 入队计数
+                Up_Queue[7:4] <= Up_Queue[7:4];//R:不接收新的 Up 
+                Up_Queue[3:0] <= Up_Queue[3:0] + 1;//R: 但仍要更新 Up 入队计数
                 //R：不更新内部 I/O
-                Code_Bit = Code_Bit;
-                Code = Code;
+                Code_Bit <= Code_Bit;
+                Code <= Code;
               end
             end
           "Down":
             begin
-              Code_Bit = Code_Bit;
-              Code = Code;
+              Code_Bit <= Code_Bit;
+              Code <= Code;
               if((Up_Queue[3:0] == 4'd0) || (Up_Queue[3:0] == 4'd1))
                 begin
-                  Up_Queue[3:0] = 4'd0;
-                  Up_Queue[7:4] = 4'hF;
+                  Up_Queue[3:0] <= 4'd0;
+                  Up_Queue[7:4] <= 4'hF;
                 end
               else
                 begin
-                  Up_Queue[3:0] = Up_Queue[3:0] - 1;
-                  Up_Queue[7:4] = Up_Queue[7:4];
+                  Up_Queue[3:0] <= Up_Queue[3:0] - 1;
+                  Up_Queue[7:4] <= Up_Queue[7:4];
                 end
             end
           default://R：某个 SW 不变的情况，外部硬件状态 & 内部 I/O 都不做改变
             begin
-              Up_Queue = Up_Queue;
-              Code_Bit = Code_Bit;
-              Code = Code;
+              Up_Queue <= Up_Queue;
+              Code_Bit <= Code_Bit;
+              Code <= Code;
             end
           endcase
         end
