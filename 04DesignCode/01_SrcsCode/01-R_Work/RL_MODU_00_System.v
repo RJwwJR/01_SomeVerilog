@@ -49,6 +49,7 @@ module System(
   
   //R：读取 SW 电平信号后存储在内部的 Code & Key
   reg [15:0] Key;
+  reg [2:0] Key_Bit;
   reg [15:0] Code;
   //R：记录已经输入的 Code bit，具有的取值范围————0,1,2,3,4，所以需要三位总线
   reg [2:0] Code_Bit;
@@ -86,13 +87,6 @@ module System(
   parameter ALARM = 3'b100;
 
   //R:状态寄存 & 转换逻辑
-  always @ (posedge CLK or posedge RESET)
-  begin 
-    if(RESET == 1)
-      Current_State <= WAIT;
-    else
-    Current_State <= Next_State;
-  end
 
   //R：次态逻辑,复位已经在次态逻辑中写掉，此处已经无需再考虑
   /*always @ (Current_State or Code_Change_Flag or BTN_Change_Flag)

@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 2023/09/08 16:38:58
+// Create Date: 2023/09/09 12:42:06
 // Design Name: 
-// Module Name: R_MODU_01_SWITCH_IO_V2
+// Module Name: SWITCH_IO_V3
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,31 +20,26 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module SWITCH_IO_V2(
-	input CLK,
-	input RESET_N,
-	input [9:0] SW,
-	input [9:0] SW_HISTORY,
+module SWITCH_IO_V3(
+  input CLK,
+  input RESET_N,
+  input [9:0] SW,
+  input [9:0] SW_HISTORY,
 
-	output wire [9:0] SW_HISTORY_OUT,
+  output wire [9:0] SW_HISTORY_OUT,
 
-	//R：两位 bus，[0]————是否改变的 Flag，[1]————Up/Down 的 Flag
-	output reg [1:0] SW_CHANGE_FLAG,
-	//R：有用的是总线值的大小，4'd[0~9]
-	output reg [3:0] WHICH_SW_CHANGE,
+  output reg [1:0] SW_CHANGE_FLAG,
+  output reg [3:0] WHICH_SW_CHANGE,
 
-	//R：只用 UP_QUEUE 的外部硬件状态描述不完备，必须像 BTN 明确，是否改变、哪位改变，所以有上面两个信号的设置
-	output reg [7:0] UP_QUEUE,
+  output reg [7:0] UP_QUEUE,
 
-	//R：由于输入密码的可能是 user 也有可能是 admin，所以此处并不能直接译码成 Code，也可能对应的是 Key
-	//R：所以用序列 SEQUENCE 表示录入暂存下来的一串数，之后再根据状态情况，确定匹配 Code/Key
-	output reg [15:0] SEQUENCE,
-	output reg [2:0] SEQUENCE_BIT
-	);
+  output reg [15:0] SEQUENCE,
+  output reg [2:0] SEQUENCE_BIT
+    );
 
-	////R：内部信号
+  ////R：内部信号
 	//R：循环计数器
-  reg [3:0] i;
+  genvar i;
   //R：比较结果标志 Flag，注意此处，对于每一个 SW 的改变都做相应的记录
 	//R：实际上是，10 × SW，每个 SW 需要用 [1:0] 进行表征 Up/Down/UnChange，一共 20 bit，解决“赋值”冲突
   reg [19:0] j;
@@ -58,11 +53,11 @@ module SWITCH_IO_V2(
   parameter Up = 1;
   parameter Down = 0; 
 
+/*
 	//R：第一个 always 块，用于电平信号的检出
 	always @ (posedge CLK or negedge RESET_N)
 	begin
-		if(!RESET_N)   
-    //R：系统 同步 RESET_N 的含义，将内部的数据全部置为初始态
+		if(!RESET_N)   //R：系统 同步 RESET_N 的含义，将内部的数据全部置为初始态
 			begin
 				//R：对于内部信号，在收到同步复位也需要进行复位
 				i <= 4'b0;
@@ -81,6 +76,30 @@ module SWITCH_IO_V2(
 					end
 			end
 	end
+*/
+  generate for ( i = 0; i < 10 ; i = i + 1)
+  begin:SWITCH_IO_V3_Generate_Block_1
+    always @ (posedge CLK or negedge RESET_N)
+    //R：第一个 always 块，用于电平信号的检出，其中 always 过程块只能写在 generate 块内部
+    begin
+      if(!RESET_N)   
+      //R：系统 同步 RESET_N 的含义，将内部的数据全部置为初始态
+        begin
+          //R：对于内部信号，在收到同步复位也需要进行复位
+          j <= 20'b0;
+        end
+      else
+        begin
+          if (SW[i] > SW_HISTORY[i]) 
+          j[(i * HalfByte/2) +: HalfByte/2] <= Up;
+          else if (SW[i] < SW_HISTORY[i]) 
+          j[(i * HalfByte/2) +: HalfByte/2] <= Down;
+          else 
+          j[(i * HalfByte/2) +: HalfByte/2] <= UnChange;
+        end
+    end
+  end
+  endgenerate
 
 	//R：第二个 always 块，将所有的电平变化检出后，开始按时间进行扫描，兼有数据译码 & 冲突处理
 	always @ (posedge CLK or negedge RESET_N) 
