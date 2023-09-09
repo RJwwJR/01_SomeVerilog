@@ -26,8 +26,10 @@ module L_MODU03_DISPLAY(
     input Current_State,
     input  Error_Times,
     input [15:0] Code,
+    input [19:0] COUNT_CLK,
     output reg [7:0] AN,
-    output reg [7:0] SEG
+    output reg [7:0] SEG,
+    output reg [9:0] LED
     );
      reg [2:0] num;
      parameter WAIT = 3'b000;
@@ -36,6 +38,41 @@ module L_MODU03_DISPLAY(
      parameter ERROR = 3'b011;
      parameter ALARM = 3'b100;
      parameter ADMIN = 3'b101;
+     
+     parameter ten_s = 500000;
+     parameter twenty_s = 1000000; 
+     
+     always @(posedge CLK)        //LED的流水计时工作，10个LED灯在不同的状态下分别进行10s和20s倒计时
+     begin
+       if(UNLOCK == 1)
+         begin
+           if(COUNT_CLK > 900000) LED <= 10'b1111111111;
+           else if(COUNT_CLK < 900000 & COUNT_CLK > 800000) LED <= 10'b0111111111;
+           else if(COUNT_CLK < 800000 & COUNT_CLK > 700000) LED <= 10'b0111111111;
+           else if(COUNT_CLK < 700000 & COUNT_CLK > 600000) LED <= 10'b0011111111;
+           else if(COUNT_CLK < 600000 & COUNT_CLK > 500000) LED <= 10'b0001111111;
+           else if(COUNT_CLK < 500000 & COUNT_CLK > 400000) LED <= 10'b0000111111;
+           else if(COUNT_CLK < 400000 & COUNT_CLK > 300000) LED <= 10'b0000011111;
+           else if(COUNT_CLK < 300000 & COUNT_CLK > 200000) LED <= 10'b0000001111;
+           else if(COUNT_CLK < 200000 & COUNT_CLK > 100000) LED <= 10'b00000000111;
+           else if(COUNT_CLK < 100000 & COUNT_CLK > 0) LED <= 10'b00000000001;
+           else LED <= 10'b0000000000;
+         end
+       else
+         begin
+           if(COUNT_CLK > 450000) LED <= 10'b1111111111;
+           else if(COUNT_CLK < 450000 & COUNT_CLK > 400000) LED <= 10'b0111111111;
+           else if(COUNT_CLK < 400000 & COUNT_CLK > 350000) LED <= 10'b0111111111;
+           else if(COUNT_CLK < 350000 & COUNT_CLK > 300000) LED <= 10'b0011111111;
+           else if(COUNT_CLK < 300000 & COUNT_CLK > 250000) LED <= 10'b0001111111;
+           else if(COUNT_CLK < 250000 & COUNT_CLK > 200000) LED <= 10'b0000111111;
+           else if(COUNT_CLK < 200000 & COUNT_CLK > 150000) LED <= 10'b0000011111;
+           else if(COUNT_CLK < 150000 & COUNT_CLK > 100000) LED <= 10'b0000001111;
+           else if(COUNT_CLK < 100000 & COUNT_CLK > 50000) LED <= 10'b00000000111;
+           else if(COUNT_CLK < 50000 & COUNT_CLK > 0) LED <= 10'b00000000001;
+           else LED <= 10'b0000000000;
+         end                      
+     end
      
      
      function Disp;      //disp函数，用于将0-9的数字转化为段码SEG显示
