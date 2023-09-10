@@ -33,12 +33,12 @@ begin
       CLK1 <= 1'b0;
       count <= 0;
     end
-  else if(count == 25000)
+  else if(count == 50000)
     begin
       CLK1 <= ~CLK1;
       count <= count + 1;
     end
-    else if(count == 50000)
+    else if(count == 100000)
       begin
         CLK1 <= ~CLK1;
         count <= 0;
