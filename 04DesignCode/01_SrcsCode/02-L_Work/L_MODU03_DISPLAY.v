@@ -44,8 +44,22 @@ module L_MODU03_DISPLAY(
      
      always @(posedge CLK)        //LED的流水计时工作，10个LED灯在不同的状态下分别进行10s和20s倒计时
      begin
-       if(UNLOCK == 1)
-         begin
+       if(Current_State == UNLOCK)
+         begin                   //开锁状态下，20s的倒计时，LED灯流水显示
+           if(COUNT_CLK > 1800000) LED <= 10'b1111111111;
+           else if(COUNT_CLK < 1800000 & COUNT_CLK > 1600000) LED <= 10'b0111111111;
+           else if(COUNT_CLK < 1600000 & COUNT_CLK > 1400000) LED <= 10'b0111111111;
+           else if(COUNT_CLK < 1400000 & COUNT_CLK > 1200000) LED <= 10'b0011111111;
+           else if(COUNT_CLK < 1200000 & COUNT_CLK > 1000000) LED <= 10'b0001111111;
+           else if(COUNT_CLK < 1000000 & COUNT_CLK > 800000) LED <= 10'b0000111111;
+           else if(COUNT_CLK < 800000 & COUNT_CLK > 600000) LED <= 10'b0000011111;
+           else if(COUNT_CLK < 600000 & COUNT_CLK > 400000) LED <= 10'b0000001111;
+           else if(COUNT_CLK < 400000 & COUNT_CLK > 200000) LED <= 10'b00000000111;
+           else if(COUNT_CLK < 200000 & COUNT_CLK > 0) LED <= 10'b00000000001;
+           else LED <= 10'b0000000000;
+         end
+       else
+         begin                 //未开锁情况下，10s倒计时LED流水显示
            if(COUNT_CLK > 900000) LED <= 10'b1111111111;
            else if(COUNT_CLK < 900000 & COUNT_CLK > 800000) LED <= 10'b0111111111;
            else if(COUNT_CLK < 800000 & COUNT_CLK > 700000) LED <= 10'b0111111111;
@@ -56,20 +70,6 @@ module L_MODU03_DISPLAY(
            else if(COUNT_CLK < 300000 & COUNT_CLK > 200000) LED <= 10'b0000001111;
            else if(COUNT_CLK < 200000 & COUNT_CLK > 100000) LED <= 10'b00000000111;
            else if(COUNT_CLK < 100000 & COUNT_CLK > 0) LED <= 10'b00000000001;
-           else LED <= 10'b0000000000;
-         end
-       else
-         begin
-           if(COUNT_CLK > 450000) LED <= 10'b1111111111;
-           else if(COUNT_CLK < 450000 & COUNT_CLK > 400000) LED <= 10'b0111111111;
-           else if(COUNT_CLK < 400000 & COUNT_CLK > 350000) LED <= 10'b0111111111;
-           else if(COUNT_CLK < 350000 & COUNT_CLK > 300000) LED <= 10'b0011111111;
-           else if(COUNT_CLK < 300000 & COUNT_CLK > 250000) LED <= 10'b0001111111;
-           else if(COUNT_CLK < 250000 & COUNT_CLK > 200000) LED <= 10'b0000111111;
-           else if(COUNT_CLK < 200000 & COUNT_CLK > 150000) LED <= 10'b0000011111;
-           else if(COUNT_CLK < 150000 & COUNT_CLK > 100000) LED <= 10'b0000001111;
-           else if(COUNT_CLK < 100000 & COUNT_CLK > 50000) LED <= 10'b00000000111;
-           else if(COUNT_CLK < 50000 & COUNT_CLK > 0) LED <= 10'b00000000001;
            else LED <= 10'b0000000000;
          end                      
      end
