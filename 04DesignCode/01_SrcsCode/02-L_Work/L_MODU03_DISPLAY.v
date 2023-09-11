@@ -80,7 +80,6 @@ module L_MODU03_DISPLAY(
      reg [7:0] Seg7;
      begin
        case(x)
-         10 : Seg7 = 8'b11111111;
          0 : Seg7 = 8'b00000011;
          1 : Seg7 = 8'b10011111;
          2 : Seg7 = 8'b00100101;
@@ -91,6 +90,7 @@ module L_MODU03_DISPLAY(
          7 : Seg7 = 8'b00011111;
          8 : Seg7 = 8'b00000001;
          9 : Seg7 = 8'b00001001;
+         default : Seg7 = 8'b11111111;
         endcase
       Disp = (Seg7);
      end
@@ -121,7 +121,11 @@ module L_MODU03_DISPLAY(
              3:begin
                  AN <= 8'b11101111;
                  SEG <= 8'b11101111;
-               end                       
+               end      
+             default:begin
+                 AN <= 8'b11111111;
+                 SEG = 8'b11111111;
+               end                 
              endcase
            end
          else if(Current_State == INPUT)  //输入状态下，显示每一位输入的数字
@@ -150,7 +154,11 @@ module L_MODU03_DISPLAY(
              4:begin
                  AN <= 8'b11111110;
                  SEG <= Disp(Error_Times);
-               end                        
+               end
+              default:begin
+                 AN <= 8'b11111111;
+                 SEG = 8'b11111111;
+               end                               
              endcase
            end
          
@@ -179,7 +187,11 @@ module L_MODU03_DISPLAY(
              4:begin
                  AN <= 8'b11110111;
                  SEG <= 8'b00000011;
-               end                  
+               end     
+              default:begin
+                 AN <= 8'b11111111;
+                 SEG = 8'b11111111;
+               end                            
              endcase
            end
            
@@ -208,7 +220,11 @@ module L_MODU03_DISPLAY(
              4:begin
                  AN <= 8'b11110111;
                  SEG <= 8'b00010001;
-               end                  
+               end    
+             default:begin
+                 AN <= 8'b11111111;
+                 SEG = 8'b11111111;
+               end                            
              endcase
            end
                
@@ -233,7 +249,11 @@ module L_MODU03_DISPLAY(
              3:begin
                  AN <= 8'b11101111;
                  SEG <= 8'b001100001;
-               end                      
+               end         
+            default:begin
+                 AN <= 8'b11111111;
+                 SEG = 8'b11111111;
+               end                            
              endcase
            end
          
@@ -259,7 +279,11 @@ module L_MODU03_DISPLAY(
                 3:begin
                     AN <= 8'b11101111;
                     SEG <= Disp(Code[15:12]);
-                  end                    
+                  end       
+               default:begin
+                   AN <= 8'b11111111;
+                   SEG = 8'b11111111;
+                 end                               
                endcase
            end
        end
