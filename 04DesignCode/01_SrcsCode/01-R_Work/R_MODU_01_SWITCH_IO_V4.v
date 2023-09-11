@@ -86,7 +86,7 @@ module SWITCH_IO_V4(
     else
     begin
       case(SW_DIFFERENCE[(SCAN_COUNTER * HalfByte/2) +: HalfByte/2])
-      "Up":
+      Up:
       begin
         SW_CHANGE_FLAG[0] <= 1'b1;
         SW_CHANGE_FLAG[1] <= 1'b1;
@@ -107,7 +107,7 @@ module SWITCH_IO_V4(
         end
       end
       //………………………………………………………………………………………………………………………………
-      "Down":
+      Down:
       begin
         //R：单次状态描述，必须改变
         //SW_CHANGE_FLAG <= { Down , 1 };

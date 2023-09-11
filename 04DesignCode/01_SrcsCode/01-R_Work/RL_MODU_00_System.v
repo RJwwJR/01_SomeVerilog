@@ -28,7 +28,7 @@ module System(
   
   output [7:0] AN,
   output [7:0] SEG,
-  output [15:0] LD
+  output [15:0] LED
   );
 
 //……………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………
@@ -44,9 +44,10 @@ module System(
   //R：状态声明
   parameter WAIT = 3'd0;
   parameter INPUT = 3'd1;
-  parameter ERROR = 3'd2;
-  parameter ALARM = 3'd3;
-  parameter UNLOCK = 3'd4;
+  parameter UNLOCK = 3'd2;
+  parameter ERROR = 3'd3;
+  parameter ALARM = 3'd4;
+  parameter ADMIN = 3'd5;
 
 //……………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………
   ////R：内部信号
@@ -116,10 +117,10 @@ module System(
     begin
       Signal_BTN <= 4'b0;
       case (Which_BTN_Posedge)
-        "BTN_RESET":     Signal_BTN[BTN_RESET] <= 1;
-        "BTN_ADMIN":     Signal_BTN[BTN_ADMIN] <= 1;
-        "BTN_OK":        Signal_BTN[BTN_OK] <= 1;
-        "BTN_BACKSPACE": Signal_BTN[BTN_BACKSPACE] <= 1;
+        BTN_RESET:     Signal_BTN[BTN_RESET] <= 1;
+        BTN_ADMIN:     Signal_BTN[BTN_ADMIN] <= 1;
+        BTN_OK:        Signal_BTN[BTN_OK] <= 1;
+        BTN_BACKSPACE: Signal_BTN[BTN_BACKSPACE] <= 1;
         //R：出现干扰则 复位
         default:         Signal_BTN <= 4'b0;
       endcase
@@ -191,14 +192,14 @@ module System(
   always @ (Current_State or SW_Change_Flag[0] or BTN_Change_Flag)
   begin
     case(Current_State)
-      "WAIT":
+      WAIT:
       begin
         if(SW_Change_Flag[0] || Signal_BTN[BTN_ADMIN])
           Next_State = INPUT;
         else
           Next_State = WAIT;
       end
-      "INPUT":
+      INPUT:
       begin
         if (SW_Change_Flag[0] || Signal_BTN[BTN_ADMIN] || Signal_BTN[BTN_BACKSPACE]) 
           Next_State = INPUT;
@@ -246,7 +247,7 @@ module System(
         //R：剩下情况，正常只有按下 BTN_RESET 时，剩下异常情况复位 WAIT 一并处理 
           Next_State = WAIT;
       end
-      "ERROR":
+      ERROR:
       begin
         if(SW_Change_Flag[0]
           || Signal_BTN[BTN_BACKSPACE] || Signal_BTN[BTN_OK])
@@ -262,7 +263,7 @@ module System(
           Next_State = WAIT;
         end
       end
-      "ALARM":
+      ALARM:
       begin
         if(Signal_BTN[BTN_OK] || Signal_BTN[BTN_BACKSPACE]
           || SW_Change_Flag[0])
@@ -278,11 +279,11 @@ module System(
           Next_State = WAIT;
         end
       end
-      "UNLOCK":
+      UNLOCK:
       begin
         //R：解锁后，先前的错误次数一定清空
         Error_Time = 0;
-        if(Signal_BTN[BTN_ADMIN] || Signal_BTN[BTN_RESET])
+        if(Signal_BTN[BTN_ADMIN])
         //R：复位的情况
          Next_State = WAIT;
         else

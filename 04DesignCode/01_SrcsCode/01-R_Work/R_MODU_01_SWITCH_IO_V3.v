@@ -130,7 +130,7 @@ module SWITCH_IO_V3(
 		else
 			begin     //R：每次时钟触发一次计数，mod 10，从而 k 的取值范围 [0~9]，可以不断重复扫描
 				case (j[(k * HalfByte/2) +: HalfByte/2])
-					"Up": 
+					Up: 
 						begin
 							//R：更新对于外部状态的单次直接描述，改变，且 Up。而 UP_QUEUE 是对外部硬件状态的整体直接描述
 							//R：外部状态的单次直接描述，有改变就需要更新，不需要像其他过程量信号进行自检根据结果更新
@@ -183,7 +183,7 @@ module SWITCH_IO_V3(
 									SEQUENCE <= SEQUENCE;
 								end
 						end
-					"Down":
+					Down:
 						begin
 							//R：单次状态描述，必须改变
 							//SW_CHANGE_FLAG <= { Down , 1 };
