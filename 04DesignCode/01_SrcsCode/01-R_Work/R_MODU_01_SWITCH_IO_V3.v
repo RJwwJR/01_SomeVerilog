@@ -26,7 +26,7 @@ module SWITCH_IO_V3(
   input [9:0] SW,
   input [9:0] SW_HISTORY,
 
-  output wire [9:0] SW_HISTORY_OUT,
+  output reg [9:0] SW_HISTORY_OUT,
 
   output reg [1:0] SW_CHANGE_FLAG,
   output reg [3:0] WHICH_SW_CHANGE,
@@ -35,7 +35,16 @@ module SWITCH_IO_V3(
 
   output reg [15:0] SEQUENCE,
   output reg [2:0] SEQUENCE_BIT
-    );
+	);
+
+	////R：参数定义
+  parameter HalfByte = 4;
+	parameter Mod_10 = 10;
+  //R：对应各种情况，default 的情况包含 UnChange 和其他未知干扰
+	parameter UnChange = 2;
+  parameter Up = 1;
+  parameter Down = 0; 
+
 
   ////R：内部信号
 	//R：循环计数器
@@ -46,12 +55,6 @@ module SWITCH_IO_V3(
 	//R：扫描信号计数器，对于十个 SW 间隔时钟周期扫描，用于处理“时钟周期内多次操作”冲突的问题
 	reg [3:0] k;
 
-  parameter HalfByte = 4;
-	parameter Mod_10 = 10;
-  //R：对应各种情况，default 的情况包含 UnChange 和其他未知干扰
-	parameter UnChange = 2;
-  parameter Up = 1;
-  parameter Down = 0; 
 
 /*
 	//R：第一个 always 块，用于电平信号的检出
@@ -90,16 +93,19 @@ module SWITCH_IO_V3(
         end
       else
         begin
-          if (SW[i] > SW_HISTORY[i]) 
-          j[(i * HalfByte/2) +: HalfByte/2] <= Up;
-          else if (SW[i] < SW_HISTORY[i]) 
+          if (SW[i] < SW_HISTORY[i]) 
           j[(i * HalfByte/2) +: HalfByte/2] <= Down;
+          else if (SW[i] > SW_HISTORY[i]) 
+          j[(i * HalfByte/2) +: HalfByte/2] <= Up;
           else 
           j[(i * HalfByte/2) +: HalfByte/2] <= UnChange;
         end
     end
   end
   endgenerate
+
+
+
 
 	//R：第二个 always 块，将所有的电平变化检出后，开始按时间进行扫描，兼有数据译码 & 冲突处理
 	always @ (posedge CLK or negedge RESET_N) 
@@ -139,7 +145,7 @@ module SWITCH_IO_V3(
                 begin 
 									//R:处理外部硬件状态，i.e.，UP_QUEUE，SW_CHANGE_FLAG，WHICH_SW_CHANGE
 									//R:接收新的 Up
-									UP_QUEUE[7:4] <= i; 
+									UP_QUEUE[7:4] <= k; 
 									//R: Up 队列入队计数++
 									UP_QUEUE[3:0] <= UP_QUEUE[3:0] + 1;
 
@@ -149,17 +155,17 @@ module SWITCH_IO_V3(
                       //R：更新内部信号状态，i.e.，实现 I/O
 											//R：进一位，准备录入
                       SEQUENCE_BIT <= SEQUENCE_BIT + 1;
-											//R：按照 i 的情况按位录入相应的密码
                       SEQUENCE[(SEQUENCE_BIT * HalfByte - 1) -:HalfByte] <= UP_QUEUE[7:4];
                     end
-                  else//R：已初始化 && 超出输入位数（小于0 / 大于等于4） == 硬件有改变 但不能录入
+                  else
+									//R：已初始化 && 超出输入位数（小于0 / 大于等于4） == 硬件有改变 但不能录入
                     begin
                       //R：外部硬件状态仍需要处理，只不过内部信号不做相应的更新
 											//R:接收新的 Up，注意！接收不接收 Up 是由 UP_QUEUE[3:0] 决定
                       //UP_QUEUE[7:4] <= i;
 											//R: Up 队列入队计数++
                       //UP_QUEUE[3:0] <= UP_QUEUE[3:0] + 1;
-                      //R：不更新内部 I/O
+                      //R：不更新内部
                       SEQUENCE_BIT <= SEQUENCE_BIT;
                       SEQUENCE <= SEQUENCE;
                     end
@@ -168,8 +174,10 @@ module SWITCH_IO_V3(
 							//R：此前已经有 Up 的 SW，根本不用 SEQUENCE_BIT 自检，直接锁死内部 I/O
 							//R：但外部硬件状态还是需要记录的
 								begin
-									UP_QUEUE[7:4] <= UP_QUEUE[7:4];//R:不接收新的 Up 
-									UP_QUEUE[3:0] <= UP_QUEUE[3:0] + 1;//R: 但仍要更新 Up 入队计数
+									//R:不接收新的 Up 
+									UP_QUEUE[7:4] <= UP_QUEUE[7:4];
+									//R: 但仍要更新 Up 入队计数
+									UP_QUEUE[3:0] <= UP_QUEUE[3:0] + 1;
 									//R：不更新内部 I/O
 									SEQUENCE_BIT <= SEQUENCE_BIT;
 									SEQUENCE <= SEQUENCE;
@@ -217,5 +225,9 @@ module SWITCH_IO_V3(
 	end
 
   //R：此 assign 与上面的 always 并行，实际上只是避免修改 input SW，所以单独设置信号将其引出
-  assign SW_HISTORY_OUT = SW;
+  //assign SW_HISTORY_OUT = SW;
+	//R：为了时序上的统一，避免用和其他 实例化、always块并行的 assign 语句，而是统一到主时钟的节奏
+	always @ (posedge CLK)
+	//R：考虑到只取这一个上升沿的 SW 作为下一个上升沿的历史
+	SW_HISTORY_OUT <= SW;
 endmodule
