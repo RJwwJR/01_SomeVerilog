@@ -5,7 +5,7 @@
 // 
 // Create Date: 2023/09/04 13:24:59
 // Design Name: 
-// Module Name: L_CLK_OUT
+// Module Name: L_CLK1
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,32 +20,32 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module M_CLK(CLK_IN, RESET_N, CLK_OUT);
-input CLK_IN;
-input RESET_N; 
-output CLK_OUT;
-reg CLK_OUT;
+module L_MOUDU_CLK1MS(CLK,RST_N,CLK1MS);
+input CLK;
+input RST_N;
+output CLK1;
+reg CLK1;
 reg [19:0] count;
-always @(posedge CLK_IN or negedge RESET_N) 
+always @(posedge clk or negedge RST_N)
 begin
-  if(!RESET_N) 
+  if(!RST_N)
     begin
-      CLK_OUT <= 1'b0;
+      CLK1 <= 1'b0;
       count <= 0;
     end
-  else if(count == 499999)
+  else if(count == 50000)
     begin
-      CLK_OUT <= ~CLK_OUT;
+      CLK1 <= ~CLK1;
       count <= count + 1;
     end
-    else if(count == 999999)
+    else if(count == 100000)
       begin
-        CLK_OUT <= ~CLK_OUT;
+        CLK1 <= ~CLK1;
         count <= 0;
       end
     else
       begin
-        CLK_OUT <= CLK_OUT;
+        CLK1 <= CLK1;
         count <= count + 1;
         end
      
